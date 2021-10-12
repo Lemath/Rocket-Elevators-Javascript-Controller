@@ -1,7 +1,7 @@
 class Column {
-    constructor(_id, _amountOfFloors, _amountOfElevators) {
+    constructor(_id, _amountOfFloors, _amountOfElevators, _status='online') {
         this.ID = _id;
-        this.status = 'online';
+        this.status = _status;
         this.amountOfFloors = _amountOfFloors;
         this.amountOfElevators = _amountOfElevators;
         this.elevatorList = [];
@@ -38,9 +38,9 @@ class Column {
         }
     }
 
-    requestElevator(floor, direction) {
-        let bestElevator = this.findElevator(floor, direction);
-        bestElevator.floorRequestList.push(floor);
+    requestElevator(requestedFloor, direction) {
+        let bestElevator = this.findElevator(requestedFloor, direction);
+        bestElevator.floorRequestList.push(requestedFloor);
         bestElevator.move();
         bestElevator.operateDoors();
         return bestElevator;
@@ -65,18 +65,14 @@ class Column {
             } else if (elevator.status == 'idle') {
                 score = 3;
             }
-            
             bestElevator = elevator.checkIfElevatorIsBetter(score, bestElevator, requestedFloor);
         });
         return bestElevator.elevator;
     }
-
-    
-
 }
 
 class Elevator {
-    constructor(_id, _amountOfFloors, _status, _currentFloor) 
+    constructor(_id, _amountOfFloors, _status='idle', _currentFloor=1) 
     {
         this.ID = _id;
         this.status = _status;
@@ -101,7 +97,6 @@ class Elevator {
     }
 
     checkIfElevatorIsBetter(scoreToCheck, bestElevator, floor) {
-        console.log(bestElevator)
         if (scoreToCheck < bestElevator.score) {
             bestElevator.score = scoreToCheck;
             bestElevator.elevator = this;
@@ -113,13 +108,12 @@ class Elevator {
                 bestElevator.referenceGap = gap;
             }
         }
-        console.log(bestElevator)
         return bestElevator;
     }
 
-    requestFloor(floor) 
+    requestFloor(requestedFloor) 
     {
-        this.floorRequestList.push(floor);
+        this.floorRequestList.push(requestedFloor);
         this.move();
         this.operateDoors();
     }
@@ -186,7 +180,7 @@ class Elevator {
 }
 
 class CallButton {
-    constructor(_id, _floor, _direction, _status) {
+    constructor(_id, _floor, _direction, _status='OFF') {
         this.ID = _id;
         this.floor = _floor;
         this.direction = _direction;
@@ -195,7 +189,7 @@ class CallButton {
 }
 
 class FloorRequestButton {
-    constructor(_id, _floor, _status) {
+    constructor(_id, _floor, _status='OFF') {
         this.ID = _id;
         this.floor = _floor;
         this.status = _status;
@@ -203,7 +197,7 @@ class FloorRequestButton {
 }
 
 class Door {
-    constructor(_id, _status) {
+    constructor(_id, _status='closed') {
         this.ID = _id;
         this.status = _status;
     }
@@ -212,8 +206,5 @@ class Door {
         return false;
     }
 }
-
-//let column = new Column(1, 10, 2)
-//console.log(column) 
 
 module.exports = { Column, Elevator, CallButton, FloorRequestButton, Door };
