@@ -1,44 +1,41 @@
-class Column {
-    constructor(_id, _amountOfFloors, _amountOfElevators, _status='online') {
+class Column 
+{
+    constructor(_id, _amountOfFloors, _amountOfElevators, _status='online', _bottomFloor=1) 
+    {
         this.ID = _id;
         this.status = _status;
         this.amountOfFloors = _amountOfFloors;
         this.amountOfElevators = _amountOfElevators;
+        this.bottomFloor = _bottomFloor;
+        this.topFloor = this.bottomFloor + this.amountOfFloors - 1;
         this.elevatorList = [];
         this.callButtonList = [];
-        this.createElevators();
-        this.createCallButtons();
+        this.buildElevatorList();
+        this.buildCallButtonList();
     }
 
-    createCallButtons() {  //made mod cause template reused too much unnessesary argument so if test fail might be culprit but dont think so
-        let buttonFloor = 1;
-        let callButtonID = 1;
-        let callButton;
-        for (let i = 0; i < this.amountOfFloors; i++) {
-            if (buttonFloor < this.amountOfFloors) {
-                callButton = new CallButton(callButtonID, 'OFF', buttonFloor, 'up');
-                this.callButtonList.push(callButton);
-            }
-            if (buttonFloor > 1) {
-                callButton = new CallButton(callButtonID, 'OFF', buttonFloor, 'down');
-                this.callButtonList.push(callButton);
-            }
-            callButtonID++;
-            buttonFloor++;
+    buildCallButtonList() 
+    { 
+        let id = 1;
+        for (let floor = this.bottomFloor; floor < this.topFloor ; floor++) {
+            this.callButtonList.push(new CallButton(id, floor, 'up'));
+            id++;
+        }
+        for (let floor = this.bottomFloor +1; floor <= this.topFloor; floor++) {
+            this.callButtonList.push(new CallButton(id, floor, 'up'));
+            id++;
         }
     }
 
-    createElevators() {
-        let elevatorID = 1;
-        let elevator;
-        for (let i = 0; i < this.amountOfElevators; i++) {
-            elevator = new Elevator(elevatorID, this.amountOfFloors, 'idle', 1);
-            this.elevatorList.push(elevator);
-            elevatorID++;
+    buildElevatorList() 
+    {
+        for (let id = 1; id <= this.amountOfElevators; id++) {
+            this.elevatorList.push(new Elevator(id, this.amountOfFloors));
         }
     }
 
-    requestElevator(requestedFloor, direction) {
+    requestElevator(requestedFloor, direction) 
+    {
         let bestElevator = this.findElevator(requestedFloor, direction);
         bestElevator.floorRequestList.push(requestedFloor);
         bestElevator.move();
@@ -46,10 +43,9 @@ class Column {
         return bestElevator;
     }
 
-  
-
-    findElevator(requestedFloor, requestedDirection) {
-        let bestElevator = {
+    findElevator(requestedFloor, requestedDirection) 
+    {
+        let comparedElevator = {
             elevator: null,
             score: 5,
             referenceGap: 10000000
@@ -65,13 +61,15 @@ class Column {
             } else if (elevator.status == 'idle') {
                 score = 3;
             }
-            bestElevator = elevator.checkIfElevatorIsBetter(score, bestElevator, requestedFloor);
+            let bestElevator = elevator.checkIfElevatorIsBetter(score, comparedElevator, requestedFloor);
+            comparedElevator = bestElevator;
         });
-        return bestElevator.elevator;
+        return comparedElevator.elevator;
     }
 }
 
-class Elevator {
+class Elevator 
+{
     constructor(_id, _amountOfFloors, _status='idle', _currentFloor=1) 
     {
         this.ID = _id;
@@ -80,6 +78,7 @@ class Elevator {
         this.currentFloor = _currentFloor;
         this.direction = null;
         this.door = new Door(this.ID, 'closed');
+        this.overweightSensor = 'OFF';
         this.floorRequestButtonList = [];
         this.floorRequestList = [];
         this.createFloorRequestButtons();
@@ -87,16 +86,14 @@ class Elevator {
 
     createFloorRequestButtons() 
     {
-        let buttonFloor = 1;
-        let floorRequestButtonID = 1;
-        for (let i = 0; i < this.amountOfFloors; i++) {
-            this.floorRequestButtonList.push(new FloorRequestButton(floorRequestButtonID, 'OFF', buttonFloor));
-            buttonFloor++;
-            floorRequestButtonID++;
+        for (let idAndFloor = 1; idAndFloor <= this.amountOfFloors; idAndFloor++) {
+            this.floorRequestButtonList.push(new FloorRequestButton(idAndFloor, idAndFloor));
         }
     }
 
-    checkIfElevatorIsBetter(scoreToCheck, bestElevator, floor) {
+    checkIfElevatorIsBetter(scoreToCheck, comparedElevator, floor) 
+    {
+        let bestElevator = comparedElevator;
         if (scoreToCheck < bestElevator.score) {
             bestElevator.score = scoreToCheck;
             bestElevator.elevator = this;
@@ -155,32 +152,37 @@ class Elevator {
     operateDoors() 
     {
         this.door.status = 'opened';
-        // Wait 5 Seconds
-        if (!this.isOverweight()) {
-            this.door.status = 'closing';
-            if(!this.door.isObstructed()) 
-            {                    
-                this.door.status = 'closed';
+        let elevator = this;
+        //setTimeout(function() {
+            if (!elevator.isOverweight()) {
+                elevator.door.status = 'closing';
+                if(!elevator.door.isObstructed()) 
+                {                    
+                    elevator.door.status = 'closed';
+                } else {
+                    elevator.operateDoors();
+                }
             } else {
-                this.operateDoors();
-            }
-        } else {
-            while (isOverweight()) {
-                this.overweightAlarm = true;
-            }
-            this.overweightAlarm = false;
-            this.operateDoors();
-        }
+                while (isOverweight()) {
+                    elevator.overweightAlarm = true;
+                }
+                elevator.overweightAlarm = false;
+                elevator.operateDoors();
+            }    
+        //}, 5000);
         
     }
 
-    isOverweight() {
-        return false;
+    isOverweight() 
+    {
+        return this.overweightSensor == 'ON';
     }
 }
 
-class CallButton {
-    constructor(_id, _floor, _direction, _status='OFF') {
+class CallButton 
+{
+    constructor(_id, _floor, _direction, _status='OFF') 
+    {
         this.ID = _id;
         this.floor = _floor;
         this.direction = _direction;
@@ -188,23 +190,30 @@ class CallButton {
     }
 }
 
-class FloorRequestButton {
-    constructor(_id, _floor, _status='OFF') {
+class FloorRequestButton 
+{
+    constructor(_id, _floor, _status='OFF') 
+    {
         this.ID = _id;
         this.floor = _floor;
         this.status = _status;
     }
 }
 
-class Door {
-    constructor(_id, _status='closed') {
+class Door 
+{
+    constructor(_id, _status='closed') 
+    {
         this.ID = _id;
         this.status = _status;
+        this.sensorState = 'OFF';
     }
 
-    isObstructed() {
-        return false;
+    isObstructed() 
+    {
+        return this.sensorState == 'ON';
     }
 }
+
 
 module.exports = { Column, Elevator, CallButton, FloorRequestButton, Door };
