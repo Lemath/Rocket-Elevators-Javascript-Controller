@@ -112,7 +112,7 @@ describe('ResidentialController', () => {
     describe("Door's attributes", () => {
         const door = new Door(1)
 
-        it('Instantiates a FloorRequestButton with valid attributes', () => {
+        it('Instantiates a Door with valid attributes', () => {
             expect(door instanceof Door).toBe(true)
 
             expect(door.ID).toEqual(1)

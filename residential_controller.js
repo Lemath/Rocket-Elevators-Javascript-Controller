@@ -61,7 +61,7 @@ class Column
             } else if (elevator.status == 'idle') {
                 score = 3;
             }
-            let bestElevator = elevator.checkIfElevatorIsBetter(score, comparedElevator, requestedFloor);
+            let bestElevator = elevator.compareElevator(score, comparedElevator, requestedFloor);
             comparedElevator = bestElevator;
         });
         return comparedElevator.elevator;
@@ -77,6 +77,7 @@ class Elevator
         this.amountOfFloors = _amountOfFloors;
         this.currentFloor = _currentFloor;
         this.direction = null;
+        this.screenDisplay = this.currentFloor;
         this.door = new Door(this.ID, 'closed');
         this.overweightSensor = 'OFF';
         this.floorRequestButtonList = [];
@@ -91,7 +92,7 @@ class Elevator
         }
     }
 
-    checkIfElevatorIsBetter(scoreToCheck, comparedElevator, floor) 
+    compareElevator(scoreToCheck, comparedElevator, floor) 
     {
         let bestElevator = comparedElevator;
         if (scoreToCheck < bestElevator.score) {
@@ -163,7 +164,7 @@ class Elevator
                     elevator.operateDoors();
                 }
             } else {
-                while (isOverweight()) {
+                while (elevator.isOverweight()) {
                     elevator.overweightAlarm = true;
                 }
                 elevator.overweightAlarm = false;
