@@ -12,7 +12,7 @@ class Column
         this.callButtonList = [];
         this.buildElevatorList();
         this.buildCallButtonList();
-    }
+    }  
 
     buildCallButtonList() 
     { 
@@ -79,6 +79,7 @@ class Elevator
         this.direction = null;
         this.screenDisplay = this.currentFloor;
         this.door = new Door(this.ID, 'closed');
+        this.overweightAlarm = false
         this.overweightSensor = 'OFF';
         this.floorRequestButtonList = [];
         this.floorRequestList = [];
